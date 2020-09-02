@@ -2,13 +2,23 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/mauricioabreu/goplex4_11/editor"
 	"github.com/mauricioabreu/goplex4_11/github"
 )
+
+var issueTemplate = template.Must(template.New("issue").Funcs(template.FuncMap{"formatTime": formatTime}).Parse(`
+Number:	{{.Number}}
+Title: {{.Title}} 
+Body: {{.Body}}
+Created:  {{.CreatedAt | formatTime}}
+Updated:  {{.UpdatedAt | formatTime}}
+`))
 
 func main() {
 	printUsage()
@@ -36,16 +46,29 @@ func main() {
 		}
 		title, body := parseText(input)
 		github.UpdateIssue(owner, repo, title, body, issueNumber)
+	} else if action == "read" {
+		issue, err := github.GetIssue(owner, repo, issueNumber)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = issueTemplate.Execute(os.Stdout, issue)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
 func parseText(input []byte) (string, string) {
 	content := strings.Split(string(input), "\n")
 	title := content[0]
-	body := strings.Join(content[1:], "\n")
+	body := strings.TrimSpace(strings.Join(content[1:], "\n"))
 	return title, body
 }
 
 func printUsage() {
-	fmt.Println("Usage: ./gcrud create|read|update|delete <args>")
+	fmt.Println("Usage: ./gcrud create|update|delete|read|close|reopen <args>")
+}
+
+func formatTime(t time.Time) string {
+	return t.Format("2020-09-02 20:12:10")
 }

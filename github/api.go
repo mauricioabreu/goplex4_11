@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,13 +12,16 @@ import (
 
 // Issue contains issue data
 type Issue struct {
-	Number int
-	Title  string
-	Body   string
+	Number    int
+	Title     string
+	Body      string
+	State     string
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // CreateIssue create a new issue
-func CreateIssue(owner, repo, title, body string) {
+func CreateIssue(owner, repo, title, body string) error {
 	requestBody, err := json.Marshal(map[string]string{
 		"title": title,
 		"body":  body,
@@ -44,25 +46,18 @@ func CreateIssue(owner, repo, title, body string) {
 	}
 	defer response.Body.Close()
 
-	respBody, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
+	if response.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failted to create issue: %s", response.Status)
 	}
-
-	log.Println(string(respBody))
+	return nil
 }
 
-// UpdateIssue update an issue
-func UpdateIssue(owner, repo, title, body, issueNumber string) {
-	requestBody, err := json.Marshal(map[string]string{
-		"title": title,
-		"body":  body,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+func patchIssue(owner, repo, issueNumber string, values map[string]string) error {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.Encode(values)
 
-	request, err := http.NewRequest("PATCH", buildIssuesURL(owner, repo, issueNumber), bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest("PATCH", buildIssuesURL(owner, repo, issueNumber), buffer)
 	request.Header.Set("Accept", "application/vnd.github.v3+json")
 	request.Header.Set("Content-Type", "application/json")
 	setAuthorization(request)
@@ -78,12 +73,19 @@ func UpdateIssue(owner, repo, title, body, issueNumber string) {
 	}
 	defer response.Body.Close()
 
-	respBody, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to update issue %s: %s", issueNumber, response.Status)
 	}
+	return nil
+}
 
-	log.Println(string(respBody))
+// UpdateIssue update an issue
+func UpdateIssue(owner, repo, title, body, issueNumber string) error {
+	values := map[string]string{
+		"title": title,
+		"body":  body,
+	}
+	return patchIssue(owner, repo, issueNumber, values)
 }
 
 // GetIssue fetch issue information
@@ -114,6 +116,22 @@ func GetIssue(owner, repo, issueNumber string) (*Issue, error) {
 	}
 
 	return &issue, nil
+}
+
+// CloseIssue close an issue
+func CloseIssue(owner, repo, issueNumber string) {
+	values := map[string]string{
+		"status": "state",
+	}
+	patchIssue(owner, repo, issueNumber, values)
+}
+
+// ReopenIssue reopen a closed issue
+func ReopenIssue(owner, repo, issueNumber string) {
+	values := map[string]string{
+		"status": "open",
+	}
+	patchIssue(owner, repo, issueNumber, values)
 }
 
 func setAuthorization(request *http.Request) {
