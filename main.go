@@ -18,18 +18,24 @@ func main() {
 	repo := args[2]
 	issueNumber := args[3]
 	if action == "create" {
-		input, err := editor.Edit()
-		title, body := parseText(input)
+		input, err := editor.Edit("")
 		if err != nil {
 			log.Fatal(err)
 		}
+		title, body := parseText(input)
 		github.CreateIssue(owner, repo, title, body)
 	} else if action == "update" {
 		issue, err := github.GetIssue(owner, repo, issueNumber)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(issue)
+		content := fmt.Sprintf("%s\n\n%s", string(issue.Title), string(issue.Body))
+		input, err := editor.Edit(content)
+		if err != nil {
+			log.Fatal(err)
+		}
+		title, body := parseText(input)
+		github.UpdateIssue(owner, repo, title, body, issueNumber)
 	}
 }
 

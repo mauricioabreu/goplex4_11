@@ -9,11 +9,12 @@ import (
 const defaultEditor = "vim"
 
 // Edit open user editor to create/update files
-func Edit() ([]byte, error) {
+func Edit(content string) ([]byte, error) {
 	file, err := ioutil.TempFile(os.TempDir(), "*")
 	if err != nil {
 		return []byte{}, err
 	}
+	file.WriteString(content)
 
 	filename := file.Name()
 	defer os.Remove(filename)
