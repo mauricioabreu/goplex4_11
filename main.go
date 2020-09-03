@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
@@ -21,12 +22,15 @@ Updated:  {{.UpdatedAt | formatTime}}
 `))
 
 func main() {
-	printUsage()
-	args := os.Args[1:]
-	action := args[0]
-	owner := args[1]
-	repo := args[2]
-	issueNumber := args[3]
+	var action string
+	var owner string
+	var repo string
+	var issueNumber string
+	flag.StringVar(&action, "action", "", "What do you want to do with Github issues?")
+	flag.StringVar(&owner, "owner", "", "Repository owner")
+	flag.StringVar(&repo, "repo", "", "Which repo you want to use to manage issues?")
+	flag.StringVar(&issueNumber, "issue_number", "", "Issue number when required")
+	flag.Parse()
 
 	switch action {
 	case "create":
@@ -101,10 +105,6 @@ func parseText(input []byte) (string, string) {
 	title := content[0]
 	body := strings.TrimSpace(strings.Join(content[1:], "\n"))
 	return title, body
-}
-
-func printUsage() {
-	fmt.Println("Usage: ./gcrud create|update|delete|read|close|reopen <args>")
 }
 
 func formatTime(t time.Time) string {
