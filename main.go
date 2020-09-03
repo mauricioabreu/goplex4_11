@@ -27,37 +27,54 @@ func main() {
 	owner := args[1]
 	repo := args[2]
 	issueNumber := args[3]
-	if action == "create" {
-		input, err := editor.Edit("")
-		if err != nil {
-			log.Fatal(err)
-		}
-		title, body := parseText(input)
-		err = github.CreateIssue(owner, repo, title, body)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else if action == "update" {
-		issue, err := github.GetIssue(owner, repo, issueNumber)
-		if err != nil {
-			log.Fatal(err)
-		}
-		content := fmt.Sprintf("%s\n\n%s", string(issue.Title), string(issue.Body))
-		input, err := editor.Edit(content)
-		if err != nil {
-			log.Fatal(err)
-		}
-		title, body := parseText(input)
-		github.UpdateIssue(owner, repo, title, body, issueNumber)
-	} else if action == "read" {
-		issue, err := github.GetIssue(owner, repo, issueNumber)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = issueTemplate.Execute(os.Stdout, issue)
-		if err != nil {
-			log.Fatal(err)
-		}
+
+	switch action {
+	case "create":
+		create(owner, repo)
+	case "update":
+		update(owner, repo, issueNumber)
+	case "read":
+		read(owner, repo, issueNumber)
+	}
+}
+
+func create(owner, repo string) {
+	input, err := editor.Edit("")
+	if err != nil {
+		log.Fatal(err)
+	}
+	title, body := parseText(input)
+	err = github.CreateIssue(owner, repo, title, body)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func update(owner, repo, issueNumber string) {
+	issue, err := github.GetIssue(owner, repo, issueNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	content := fmt.Sprintf("%s\n\n%s", string(issue.Title), string(issue.Body))
+	input, err := editor.Edit(content)
+	if err != nil {
+		log.Fatal(err)
+	}
+	title, body := parseText(input)
+	err = github.UpdateIssue(owner, repo, title, body, issueNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func read(owner, repo, issueNumber string) {
+	issue, err := github.GetIssue(owner, repo, issueNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = issueTemplate.Execute(os.Stdout, issue)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
