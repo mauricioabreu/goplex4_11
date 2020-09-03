@@ -33,7 +33,10 @@ func main() {
 			log.Fatal(err)
 		}
 		title, body := parseText(input)
-		github.CreateIssue(owner, repo, title, body)
+		err = github.CreateIssue(owner, repo, title, body)
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else if action == "update" {
 		issue, err := github.GetIssue(owner, repo, issueNumber)
 		if err != nil {

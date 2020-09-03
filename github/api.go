@@ -119,19 +119,19 @@ func GetIssue(owner, repo, issueNumber string) (*Issue, error) {
 }
 
 // CloseIssue close an issue
-func CloseIssue(owner, repo, issueNumber string) {
+func CloseIssue(owner, repo, issueNumber string) error {
 	values := map[string]string{
 		"status": "state",
 	}
-	patchIssue(owner, repo, issueNumber, values)
+	return patchIssue(owner, repo, issueNumber, values)
 }
 
 // ReopenIssue reopen a closed issue
-func ReopenIssue(owner, repo, issueNumber string) {
+func ReopenIssue(owner, repo, issueNumber string) error {
 	values := map[string]string{
 		"status": "open",
 	}
-	patchIssue(owner, repo, issueNumber, values)
+	return patchIssue(owner, repo, issueNumber, values)
 }
 
 func setAuthorization(request *http.Request) {
