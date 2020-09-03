@@ -35,6 +35,10 @@ func main() {
 		update(owner, repo, issueNumber)
 	case "read":
 		read(owner, repo, issueNumber)
+	case "close":
+		close(owner, repo, issueNumber)
+	case "reopen":
+		reopen(owner, repo, issueNumber)
 	}
 }
 
@@ -73,6 +77,20 @@ func read(owner, repo, issueNumber string) {
 		log.Fatal(err)
 	}
 	err = issueTemplate.Execute(os.Stdout, issue)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func close(owner, repo, issueNumber string) {
+	err := github.CloseIssue(owner, repo, issueNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func reopen(owner, repo, issueNumber string) {
+	err := github.ReopenIssue(owner, repo, issueNumber)
 	if err != nil {
 		log.Fatal(err)
 	}

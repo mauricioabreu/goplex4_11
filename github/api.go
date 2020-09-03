@@ -121,7 +121,7 @@ func GetIssue(owner, repo, issueNumber string) (*Issue, error) {
 // CloseIssue close an issue
 func CloseIssue(owner, repo, issueNumber string) error {
 	values := map[string]string{
-		"status": "state",
+		"state": "closed",
 	}
 	return patchIssue(owner, repo, issueNumber, values)
 }
@@ -129,7 +129,7 @@ func CloseIssue(owner, repo, issueNumber string) error {
 // ReopenIssue reopen a closed issue
 func ReopenIssue(owner, repo, issueNumber string) error {
 	values := map[string]string{
-		"status": "open",
+		"state": "open",
 	}
 	return patchIssue(owner, repo, issueNumber, values)
 }
